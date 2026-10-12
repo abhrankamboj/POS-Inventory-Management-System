@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abhi's Smart POS & CRM</title>
+    <style>
+        /* --- THEME VARIABLES --- */
+        :root {
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-red: #ef4444;
+            --accent-green: #22c55e;
+            --accent-whatsapp: #25D366;
+            --border-color: #334155;
+            --shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .light-mode {
+            --bg-color: #f1f5f9;
+            --surface-color: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent-blue: #2563eb;
+            --border-color: #cbd5e1;
+            --shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        /* --- GLOBAL STYLES --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        h1 { margin: 0; font-size: 1.8rem; letter-spacing: 1px; }
+        h2 { margin-top: 0; color: var(--accent-blue); font-size: 1.2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;}
+
+        .container {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        .panel {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        /* --- FORMS & INPUTS --- */
+        .form-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .form-group { flex: 1; }
+        
+        label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;}
+        input, select {
+            width: 100%; padding: 10px; background: var(--bg-color); 
+            border: 1px solid var(--border-color); color: var(--text-main); 
+            border-radius: 6px; box-sizing: border-box; font-size: 0.95rem;
+            transition: 0.2s;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+
+        /* --- BUTTONS --- */
+        button {
+            background-color: var(--accent-blue); color: #fff; border: none;
+            padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;
+            transition: 0.2s; font-size: 0.95rem;
+        }
+        button:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .btn-success { background-color: var(--accent-green); width: 100%; padding: 15px; font-size: 1.1rem; margin-bottom: 10px;}
+        .btn-whatsapp { background-color: var(--accent-whatsapp); width: 100%; padding: 12px; margin-bottom: 10px; color: white;}
+        .btn-outline { background-color: transparent; border: 2px solid var(--text-main); color: var(--text-main); }
+        .btn-outline:hover { background-color: var(--text-main); color: var(--surface-color); }
+
+        /* --- TABLES & BILLING --- */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.95rem;}
+        th, td { padding: 12px 8px; border-bottom: 1px solid var(--border-color); text-align: left; }
+        th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.8rem;}
+
+        .bill-summary { 
+            background: var(--bg-color); padding: 20px; border-radius: 8px; 
+            border: 1px solid var(--border-color); margin-bottom: 20px;
+        }
+        .summary-line { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 1.05rem;}
+        .grand-total { font-size: 1.4rem; font-weight: bold; color: var(--accent-green); border-top: 2px dashed var(--border-color); padding-top: 10px; margin-top: 10px;}
+        
+        /* --- VISUAL ELEMENTS --- */
+        .alert-red { color: var(--accent-red); font-weight: bold; }
+        .customer-card { background: var(--bg-color); padding: 15px; border-left: 4px solid var(--accent-blue); border-radius: 4px; line-height: 1.6;}
+        
+        .bar-container { width: 100%; background: var(--bg-color); border-radius: 4px; height: 12px; margin-top: 5px; overflow: hidden;}
+        .bar-fill { height: 100%; background: var(--accent-blue); border-radius: 4px; transition: width 0.5s ease-in-out;}
+        .bar-fill.low { background: var(--accent-red); }
+        
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px;}
+        .dash-box { background: var(--bg-color); padding: 15px; border-radius: 8px; text-align: center; border: 1px solid var(--border-color);}
+        .dash-box h4 { margin: 0 0 5px 0; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;}
+        .dash-box span { font-size: 1.3rem; font-weight: bold;}
+
+        /* --- PRINT STYLES --- */
+        @media print {
+            body * { visibility: hidden; }
+            #printableBill, #printableBill * { visibility: visible; }
+            #printableBill { position: absolute; left: 0; top: 0; width: 100%; background: white; color: black; padding: 20px; border: none;}
+            .no-print { display: none !important; }
+        }
+
+        /* --- RESPONSIVE FIXES --- */
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Abhi's Smart POS</h1>
+    <button class="btn-outline" onclick="toggleTheme()">🌓 Toggle Light/Dark Mode</button>
+</div>
+
+<div class="container">
+    <div class="panel">
+        <h2>🛍️ New Order & Billing</h2>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>Mobile Number</label>
+                <input type="text" id="custPhone" placeholder="Enter 10 digits..." oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)" onblur="fetchCustomer()">
+            </div>
+            <div class="form-group">
+                <label>Customer Name</label>
+                <input type="text" id="custName" placeholder="Name">
+            </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label>Address</label>
+            <input type="text" id="custAddress" placeholder="E.g., Phase 7, Mohali">
+        </div>
+
+        <div class="form-row" style="align-items: flex-end; background: var(--bg-color); padding: 15px; border-radius: 8px;">
+            <div class="form-group" style="flex: 2;">
+                <label>Select Product / Service</label>
+                <select id="itemSelect"></select>
+            </div>
+            <div class="form-group" style="width: 80px; flex: none;">
+                <label>Qty</label>
+                <input type="number" id="itemQty" value="1" min="1">
+            </div>
+            <button onclick="addToCart()">+ Add</button>
+        </div>
+
+        <div id="printableBill">
+            <h3 class="no-print" style="margin-top: 30px;">Current Cart</h3>
+            <div style="display: none;" class="print-header">
+                <h2>ABHI'S SHOP - TAX INVOICE</h2>
+                <p id="printCustomerDetails"></p>
+                <hr>
+            </div>
+            
+            <table>
+                <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+                <tbody id="cartBody"></tbody>
+            </table>
+
+            <div class="bill-summary">
+                <div class="summary-line"><span>Subtotal:</span> <span id="subtotal">₹0.00</span></div>
+                
+                <div class="form-row no-print" style="margin: 15px 0;">
+                    <div class="form-group">
+                        <label>Discount (%)</label>
+                        <input type="number" id="manualDiscount" value="0" min="0" max="100" onkeyup="calculateTotals()" onchange="calculateTotals()">
+                    </div>
+                    <div class="form-group">
+                        <label>GST (%)</label>
+                        <select id="gstRate" onchange="calculateTotals()">
+                            <option value="0">0%</option>
+                            <option value="5">5%</option>
+                            <option value="12">12%</option>
+                            <option value="18" selected>18%</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="summary-line" style="color: var(--accent-red); font-size: 0.95rem;">
+                    <span>Discount Applied:</span> <span id="discountAmountDisp">-₹0.00</span>
+                </div>
+                <div class="summary-line"><span>Amount After Discount:</span> <span id="taxableAmount">₹0.00</span></div>
+                <div class="summary-line"><span>GST Applied:</span> <span id="gstAmount">₹0.00</span></div>
+                <div class="summary-line grand-total"><span>Grand Total:</span> <span id="grandTotal">₹0.00</span></div>
+            </div>
+        </div>
+
+        <div class="form-row no-print">
+            <div class="form-group">
+                <label>Amount Paid (₹)</label>
+                <input type="number" id="amountPaid" value="0" min="0" onkeyup="calculateTotals()" onchange="calculateTotals()">
+            </div>
+            <div class="form-group">
+                <label>Pending Udhaar (₹)</label>
+                <input type="text" id="amountDue" value="₹0.00" disabled style="color: var(--accent-red); font-weight: bold;">
+            </div>
+        </div>
+
+        <button class="btn-success no-print" onclick="processCheckout()">💾 Save Transaction</button>
+        
+        <div class="form-row no-print" style="margin-top: 10px;">
+            <button class="btn-whatsapp" onclick="sendWhatsApp()">💬 Send Bill via WhatsApp</button>
+            <button class="btn-outline" style="width: 100%;" onclick="printReceipt()">🖨️ Print Receipt</button>
+        </div>
+    </div>
+
+    <div>
+        <div class="panel" style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>👤 Customer Database</h2>
+                <div>
+                    <button class="btn-outline" style="padding: 5px 10px; font-size: 0.8rem;" onclick="viewAllCustomers()">👥 View All</button>
+                    <button class="btn-outline" style="padding: 5px 10px; font-size: 0.8rem;" onclick="exportToExcel()">📥 Export CSV</button>
+                </div>
+            </div>
+            <div id="crmDashboard" style="color: var(--text-muted); font-style: italic; margin-top: 10px;">
+                Search a mobile number to load history...
+            </div>
+        </div>
+
+        <div class="panel" style="margin-bottom: 20px;">
+            <h2>📈 Day-End Analytics (Z-Report)</h2>
+            <div class="dashboard-grid">
+                <div class="dash-box"><h4>Cash In</h4><span id="dashCash" style="color: var(--accent-green)">₹0</span></div>
+                <div class="dash-box"><h4>Udhaar Given</h4><span id="dashUdhaar" style="color: var(--accent-red)">₹0</span></div>
+                <div class="dash-box"><h4>GST Collected</h4><span id="dashGST" style="color: var(--accent-blue)">₹0</span></div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>📊 Live Visual Analytics</h2>
+            <div id="inventoryList"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- THEME TOGGLE ---
+    function toggleTheme() { document.body.classList.toggle('light-mode'); }
+
+    // --- BUSINESS ANALYTICS STATE ---
+    let dailyStats = { cash: 0, udhaar: 0, gst: 0 };
+
+    function updateDashboard() {
+        document.getElementById('dashCash').innerText = `₹${dailyStats.cash.toFixed(2)}`;
+        document.getElementById('dashUdhaar').innerText = `₹${dailyStats.udhaar.toFixed(2)}`;
+        document.getElementById('dashGST').innerText = `₹${dailyStats.gst.toFixed(2)}`;
+    }
+
+    // --- EXPORT TO EXCEL (CSV) ---
+    function exportToExcel() {
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Phone,Name,Address,Total Spent (INR),Pending Udhaar (INR)\n";
+        
+        for (const phone in customers) {
+            let c = customers[phone];
+            csvContent += `${phone},${c.name},${c.address},${c.totalSpent},${c.udhaar}\n`;
+        }
+
+        let encodedUri = encodeURI(csvContent);
+        let link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "Abhis_Shop_Customer_Report.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // --- WHATSAPP INTEGRATION ---
+    function sendWhatsApp() {
+        if(cart.length === 0) { alert("Cart is empty!"); return; }
+        let phone = document.getElementById('custPhone').value;
+        let name = document.getElementById('custName').value || "Customer";
+        if(phone.length < 10) { alert("Please enter a valid mobile number first."); return; }
+
+        let grandTotal = document.getElementById('grandTotal').innerText;
+        let paid = document.getElementById('amountPaid').value || 0;
+        let due = document.getElementById('amountDue').value;
+
+        let msg = `*ABHI'S SHOP - TAX INVOICE*\n\nHello ${name},\nThank you for your purchase!\n\n*Order Details:*\n`;
+        cart.forEach(item => { msg += `- ${item.name} (x${item.qty}): ₹${item.price * item.qty}\n`; });
+        msg += `\n*Grand Total:* ${grandTotal}\n*Amount Paid:* ₹${paid}\n*Pending Udhaar:* ${due}\n\nHave a great day!`;
+        
+        let whatsappUrl = `https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`;
+        window.open(whatsappUrl, '_blank');
+    }
+
+    // --- PRINT RECEIPT ---
+    function printReceipt() {
+        if(cart.length === 0) { alert("Cart is empty."); return; }
+        let name = document.getElementById('custName').value || "Walk-in Customer";
+        let phone = document.getElementById('custPhone').value || "N/A";
+        document.getElementById('printCustomerDetails').innerHTML = `<strong>Bill To:</strong> ${name}<br><strong>Phone:</strong> ${phone}<br><strong>Date:</strong> ${new Date().toLocaleDateString()}`;
+        document.querySelector('.print-header').style.display = 'block';
+        window.print();
+        document.querySelector('.print-header').style.display = 'none';
+    }
+
+    // --- CORE DATABASE ---
+    let products = [
+        { id: 1, name: 'Premium Leather Wallet', stock: 25, maxStock: 75, price: 800 },
+        { id: 2, name: 'Mechanical Keyboard', stock: 40, maxStock: 100, price: 2500 }, 
+        { id: 3, name: 'Wireless Earbuds', stock: 23, maxStock: 90, price: 1200 },
+        { id: 4, name: 'Smartwatch Charger', stock: 1, maxStock: 50, price: 300 }
+    ];
+
+    let customers = {
+        "9876543210": { name: "Rahul Sharma", address: "Phase 7, Mohali", totalSpent: 3500, udhaar: 500, history: ["Wireless Earbuds"] }
+    };
+    let cart = [];
+
+    function init() { 
+        updateProductUI(); 
+        viewAllCustomers(); 
+    }
+
+    function updateProductUI() {
+        const select = document.getElementById('itemSelect');
+        const invList = document.getElementById('inventoryList');
+        select.innerHTML = ''; invList.innerHTML = '';
+
+        products.forEach(item => {
+            select.innerHTML += `<option value="${item.id}">${item.name} (₹${item.price})</option>`;
+            
+            let stockPercent = Math.max(0, (item.stock / item.maxStock) * 100);
+            let barClass = item.stock <= 2 ? 'bar-fill low' : 'bar-fill';
+            let statusText = item.stock <= 2 ? `<span class="alert-red">${item.stock} tracked</span>` : `${item.stock} tracked`;
+
+            invList.innerHTML += `
+                <div style="margin-bottom: 15px;">
+                    <div style="display:flex; justify-content:space-between; font-size: 0.9rem; margin-bottom: 5px;">
+                        <strong>${item.name}</strong> <span>${statusText}</span>
+                    </div>
+                    <div class="bar-container"><div class="${barClass}" style="width: ${stockPercent}%"></div></div>
+                </div>`;
+        });
+    }
+
+    // --- REUSABLE TOAST NOTIFICATION ---
+    function showToast(msgText, bgColor = "var(--accent-green)") {
+        const msg = document.createElement('div');
+        msg.style.cssText = `position:fixed; top:20px; left:50%; transform:translateX(-50%); background:${bgColor}; color:white; padding:15px 25px; border-radius:8px; z-index:1000; box-shadow:var(--shadow); font-weight:bold; transition: opacity 0.3s;`;
+        msg.innerText = msgText;
+        document.body.appendChild(msg);
+        setTimeout(() => { msg.style.opacity = "0"; setTimeout(() => msg.remove(), 300); }, 3000);
+    }
+
+    // --- UDHAAR SETTLEMENT ---
+    function payUdhaar(phone) {
+        let amountInput = document.getElementById('udhaarPayAmount');
+        let amount = parseFloat(amountInput.value);
+        if(isNaN(amount) || amount <= 0) {
+            showToast("Please enter a valid amount!", "var(--accent-red)");
+            return;
+        }
+
+        let customer = customers[phone];
+        if(amount > customer.udhaar) {
+            showToast("Payment exceeds pending udhaar!", "var(--accent-red)");
+            return;
+        }
+
+        customer.udhaar -= amount;
+        dailyStats.cash += amount; // Add recovered udhaar to today's cash
+        updateDashboard();
+
+        showToast(`₹${amount} paid successfully. Remaining Udhaar: ₹${customer.udhaar}`, "var(--accent-green)");
+        fetchCustomer(); // Re-render the CRM card to show updated balance
+    }
+
+    // --- TOGGLE CUSTOMER HISTORY ---
+    function toggleHistory(phone) {
+        let histDiv = document.getElementById(`history-${phone}`);
+        let btn = document.getElementById(`btn-history-${phone}`);
+        if(histDiv.style.display === "none") {
+            histDiv.style.display = "block";
+            btn.innerText = "🙈 Hide Purchase History";
+        } else {
+            histDiv.style.display = "none";
+            btn.innerText = "🛍️ Show Purchase History";
+        }
+    }
+
+    // --- VIEW FULL DATABASE ---
+    function viewAllCustomers() {
+        let crmDash = document.getElementById('crmDashboard');
+        let html = `<div style="max-height: 250px; overflow-y: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left;">
+                <thead style="border-bottom: 2px solid var(--border-color);">
+                    <tr><th style="padding: 8px;">Phone</th><th style="padding: 8px;">Name</th><th style="padding: 8px;">Udhaar</th></tr>
+                </thead>
+                <tbody>`;
+        
+        let count = 0;
+        for (const phone in customers) {
+            count++;
+            let c = customers[phone];
+            let udhaarStyle = c.udhaar > 0 ? 'color: var(--accent-red); font-weight: bold;' : '';
+            html += `<tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 8px;"><a href="#" onclick="document.getElementById('custPhone').value='${phone}'; fetchCustomer(); return false;" style="color: var(--accent-blue); text-decoration: none;"><strong>${phone}</strong></a></td>
+                <td style="padding: 8px;">${c.name}</td>
+                <td style="padding: 8px; ${udhaarStyle}">₹${c.udhaar.toFixed(2)}</td>
+            </tr>`;
+        }
+        
+        if(count === 0) {
+            html += `<tr><td colspan="3" style="text-align:center; padding: 10px;">No customers yet.</td></tr>`;
+        }
+        
+        html += `</tbody></table></div>`;
+        crmDash.innerHTML = html;
+    }
+
+    function fetchCustomer() {
+        let phone = document.getElementById('custPhone').value;
+        let crmDash = document.getElementById('crmDashboard');
+        
+        // If search field is empty, show all customers
+        if (!phone) {
+            viewAllCustomers();
+            return;
+        }
+
+        if (customers[phone]) {
+            let c = customers[phone];
+            document.getElementById('custName').value = c.name;
+            document.getElementById('custAddress').value = c.address;
+            
+            // Build the Udhaar Payment UI if they owe money
+            let udhaarSection = c.udhaar > 0 ? `
+                <div style="margin-top: 15px; background: var(--bg-color); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <label style="font-size: 0.75rem; margin-bottom: 5px;">Settle Pending Udhaar</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="udhaarPayAmount" placeholder="Amount to pay..." style="padding: 8px;">
+                        <button onclick="payUdhaar('${phone}')" style="padding: 8px 15px; font-size: 0.85rem;">Pay</button>
+                    </div>
+                </div>` : '';
+
+            crmDash.innerHTML = `
+                <div class="customer-card">
+                    <h3 style="margin-top:0;">${c.name}</h3>
+                    <strong>Total Spent:</strong> <span style="color: var(--accent-green)">₹${c.totalSpent.toFixed(2)}</span><br>
+                    <strong>Pending Udhaar:</strong> <span class="alert-red">₹${c.udhaar.toFixed(2)}</span><br>
+                    
+                    ${udhaarSection}
+
+                    <hr style="border-color: var(--border-color); margin: 15px 0 10px 0;">
+                    <button id="btn-history-${phone}" class="btn-outline" style="padding: 5px 10px; font-size: 0.8rem;" onclick="toggleHistory('${phone}')">🛍️ Show Purchase History</button>
+                    <div id="history-${phone}" style="display: none; margin-top: 10px; padding: 10px; background: var(--bg-color); border-radius: 4px;">
+                        <small><strong>Past Items:</strong><br>• ${c.history.length > 0 ? c.history.join("<br>• ") : "No items yet."}</small>
+                    </div>
+                </div>`;
+        } else {
+            crmDash.innerHTML = `<em>New Customer! Details will be saved upon checkout.</em>`;
+        }
+    }
+
+    function addToCart() {
+        let itemId = parseInt(document.getElementById('itemSelect').value);
+        let qty = parseInt(document.getElementById('itemQty').value);
+        let item = products.find(i => i.id === itemId);
+
+        if (item.stock < qty) {
+            alert(`⚠️ Error: Not enough stock! You only have ${item.stock} left.`);
+            return;
+        }
+
+        let existing = cart.find(c => c.id === itemId);
+        if(existing) { existing.qty += qty; } else { cart.push({ id: item.id, name: item.name, price: item.price, qty: qty }); }
+        
+        item.stock -= qty; 
+        renderCart(); 
+        updateProductUI(); 
+    }
+
+    function renderCart() {
+        let tbody = document.getElementById('cartBody');
+        tbody.innerHTML = ''; let subtotal = 0;
+
+        cart.forEach(item => {
+            let total = item.price * item.qty; subtotal += total;
+            tbody.innerHTML += `<tr><td>${item.name}</td><td>${item.qty}</td><td>₹${item.price}</td><td>₹${total}</td></tr>`;
+        });
+
+        document.getElementById('subtotal').innerText = `₹${subtotal.toFixed(2)}`;
+        calculateTotals();
+    }
+
+    function calculateTotals() {
+        let subtotal = parseFloat(document.getElementById('subtotal').innerText.replace('₹', '')) || 0;
+        
+        // Fetch Percentage Discount
+        let discountPercent = parseFloat(document.getElementById('manualDiscount').value) || 0;
+        if (discountPercent > 100) {
+            discountPercent = 100;
+            document.getElementById('manualDiscount').value = 100;
+        }
+        if (discountPercent < 0) {
+            discountPercent = 0;
+            document.getElementById('manualDiscount').value = 0;
+        }
+
+        let gstRate = parseFloat(document.getElementById('gstRate').value) || 0;
+        let paid = parseFloat(document.getElementById('amountPaid').value) || 0;
+
+        // Calculate the actual discount amount in Rupees
+        let discountAmount = subtotal * (discountPercent / 100);
+        let taxable = Math.max(0, subtotal - discountAmount);
+        
+        let gstAmount = taxable * (gstRate / 100);
+        let grandTotal = taxable + gstAmount;
+        let due = grandTotal - paid;
+
+        // Update the screen UI
+        document.getElementById('discountAmountDisp').innerText = `-₹${discountAmount.toFixed(2)}`;
+        document.getElementById('taxableAmount').innerText = `₹${taxable.toFixed(2)}`;
+        document.getElementById('gstAmount').innerText = `₹${gstAmount.toFixed(2)}`;
+        document.getElementById('grandTotal').innerText = `₹${grandTotal.toFixed(2)}`;
+        document.getElementById('amountDue').value = due > 0 ? `₹${due.toFixed(2)}` : '₹0.00 (Cleared)';
+    }
+
+    function processCheckout() {
+        if(cart.length === 0) { alert("Cart is empty!"); return; }
+        let phone = document.getElementById('custPhone').value;
+        let name = document.getElementById('custName').value;
+        let address = document.getElementById('custAddress').value;
+        if(!phone || !name) { alert("Please enter Customer Name and Mobile Number!"); return; }
+
+        let grandTotal = parseFloat(document.getElementById('grandTotal').innerText.replace('₹', ''));
+        let paid = parseFloat(document.getElementById('amountPaid').value) || 0;
+        let gstAmount = parseFloat(document.getElementById('gstAmount').innerText.replace('₹', '')) || 0;
+        let due = grandTotal - paid;
+
+        dailyStats.cash += paid;
+        dailyStats.udhaar += due > 0 ? due : 0;
+        dailyStats.gst += gstAmount;
+        updateDashboard();
+
+        let itemsBought = cart.map(c => c.name);
+        if(customers[phone]) {
+            customers[phone].totalSpent += grandTotal;
+            customers[phone].udhaar += (due > 0 ? due : 0);
+            customers[phone].history.push(...itemsBought);
+        } else {
+            customers[phone] = { name: name, address: address, totalSpent: grandTotal, udhaar: due > 0 ? due : 0, history: itemsBought };
+        }
+
+        showToast("Transaction Saved & Dashboard Updated!");
+
+        cart = []; 
+        document.getElementById('amountPaid').value = 0; 
+        document.getElementById('manualDiscount').value = 0;
+        
+        // Reset Customer Inputs to ready for next order
+        document.getElementById('custPhone').value = '';
+        document.getElementById('custName').value = '';
+        document.getElementById('custAddress').value = '';
+
+        renderCart(); 
+        viewAllCustomers(); // Refresh the visible database list!
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
